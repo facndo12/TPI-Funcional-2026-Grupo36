@@ -34,3 +34,22 @@
 
 		(t 'intermitente-amarillo-rojo)
 	)))
+
+; ========================================================
+;; FUNCION: registrarCambio
+;;
+;; NATURALEZA: Impura - (Produce efectos secundarios de entrada/salida. Altera
+;;             la terminal al imprimir texto en pantalla y
+;;             retorna siempre el valor NIL)
+;;
+;; ESTRATEGIA: Evaluacion Secuencial de Salida - (Utiliza format
+;;             para procesar y mostrar los datos ordenadamente)
+;;
+;; IMPACTO: No destructiva - (No modifica variables ni altera estructuras en
+;;          memoria)
+;; ========================================================
+(defun registrarCambio (epoch colorAnterior colorNuevo)
+  (format t "Tiempo ~ D: la luz ha cambiado de ~A a ~A ~%" 
+          epoch 
+          colorAnterior 
+          colorNuevo))
