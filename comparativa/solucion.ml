@@ -1,5 +1,5 @@
 (* =======================================================
-   FUNCION: transicion_v2
+   FUNCION: transicion
 
    NATURALEZA: Pura
    (No produce efectos secundarios. Para las mismas
@@ -7,113 +7,80 @@
 
    ESTRATEGIA: Pattern Matching
    (Utiliza match ... with para evaluar los distintos
-   estados y destinos posibles del semáforo.)
+   estados y destinos posibles.)
 
    IMPACTO: No destructiva
    (No modifica estructuras existentes, solamente
-   construye y devuelve una nueva tupla con el estado
-   y la acción correspondiente.)
+   devuelve una nueva tupla con el estado y la acción.)
 
    ======================================================= *)
+
 type estado =
   | EnRojo
   | EnVerde
   | EnAmarillo
-  | IntermitenteRojoVerde
-  | IntermitenteVerdeAmarillo
-  | IntermitenteAmarilloRojo
 
 type destino =
   | Rojo
   | Verde
   | Amarillo
-  | AIntermitenteRojoVerde
-  | AIntermitenteVerdeAmarillo
-  | AIntermitenteAmarilloRojo
 
-let transicion_v2 color_actual cambiar_a =
+let transicion color_actual cambiar_a =
   match (color_actual, cambiar_a) with
-  | (EnRojo, AIntermitenteRojoVerde) ->
-      (EnRojo, "cambiar-a-intermitente-rojo-verde")
 
-  | (IntermitenteRojoVerde, Verde) ->
-      (IntermitenteRojoVerde, "cambiar-a-verde")
+  | (EnRojo, Verde) ->
+      (EnRojo, "EnRojo, cambiar-a-verde")
 
-  | (EnVerde, AIntermitenteVerdeAmarillo) ->
-      (EnVerde, "cambiar-a-intermitente-verde-amarillo")
+  | (EnVerde, Amarillo) ->
+      (EnVerde, "EnVerde, cambiar-a-amarillo")
 
-  | (IntermitenteVerdeAmarillo, Amarillo) ->
-      (IntermitenteVerdeAmarillo, "cambiar-a-amarillo")
-
-  | (EnAmarillo, AIntermitenteAmarilloRojo) ->
-      (EnAmarillo, "cambiar-a-intermitente-amarillo-rojo")
-
-  | (IntermitenteAmarilloRojo, Rojo) ->
-      (IntermitenteAmarilloRojo, "cambiar-a-rojo")
+  | (EnAmarillo, Rojo) ->
+      (EnAmarillo, "EnAmarillo, cambiar-a-rojo")
 
   | _ ->
       (color_actual, "accion-por-defecto")
 
 let () =
-  let (_, accion1) =
-    transicion_v2 IntermitenteRojoVerde  Verde
-  in
-  print_endline accion1
-;;
+  print_endline "Pruebas de transicion";
 
 
 (* ========================================================================== *)
-(* FUNCIÓN: Timer                                                             *)
-(* NATURALEZA: Pura                                                           *)
-(* ESTRATEGIA: Expresiones condicionales y mapeo matematico                   *)
+(* FUNCIÓN: timer_basico                                                      *)
+(* NATURALEZA: Pura (Dado un timestamp, siempre retorna el mismo color)       *)
+(* ESTRATEGIA: Expresiones Condicionales mapeo Matemático                   *)
 (* IMPACTO: No destructiva                                                    *)
 (* ========================================================================== *)
 
-type estado_semaforo = 
+type estado_basico = 
   | EnRojo 
-  | IntermitenteRojoVerde 
   | EnVerde 
-  | IntermitenteVerdeAmarillo 
-  | EnAmarillo 
-  | IntermitenteAmarilloRojo
+  | EnAmarillo
 
-let timer 
-    (tiempoUnix : int) 
-    (rojo : int) 
-    (inter_rojo_verde : int) 
-    (verde : int) 
-    (inter_verde_amarillo : int) 
-    (amarillo : int) 
-    (inter_amarillo_rojo : int) : estado_semaforo =
+let timer_basico (tiempo_unix : int) : estado_basico =
+  
+  let rojo = 90 in
+  let amarillo = 6 in
+  let verde = 120 in
+  
+  let segundo = tiempo_unix mod (rojo + amarillo + verde) in
 
-  let segundo = 
-    tiempoUnix mod (rojo + inter_rojo_verde + verde + inter_verde_amarillo + amarillo + inter_amarillo_rojo) 
-  in
 
   if segundo < rojo then
     EnRojo
-  else if segundo < (rojo + inter_rojo_verde) then
-    IntermitenteRojoVerde
-  else if segundo < (rojo + inter_rojo_verde + verde) then
+  else if segundo < (rojo + verde) then
     EnVerde
-  else if segundo < (rojo + inter_rojo_verde + verde + inter_verde_amarillo) then
-    IntermitenteVerdeAmarillo
-  else if segundo < (rojo + inter_rojo_verde + verde + inter_verde_amarillo + amarillo) then
-    EnAmarillo
   else
-    IntermitenteAmarilloRojo
+    EnAmarillo
 
-(*Caso de prueba:*)
+(* Caso de prueba *)
 let () =
-  
-  let resultado = timer 92 90 3 120 3 6 3 in
+
+  let resultado = timer_basico 100 in
 
   print_endline (
     match resultado with
-    | EnRojo -> "Resultado: EN ROJO"
-    | IntermitenteRojoVerde -> "Resultado: INTERMITENTE ROJO -> VERDE"
-    | EnVerde -> "Resultado: EN VERDE"
-    | IntermitenteVerdeAmarillo -> "Resultado: INTERMITENTE VERDE -> AMARILLO"
-    | EnAmarillo -> "Resultado: EN AMARILLO"
-    | IntermitenteAmarilloRojo -> "Resultado: INTERMITENTE AMARILLO -> ROJO"
+    | EnRojo -> "Resultado Básico: EN ROJO"
+    | EnVerde -> "Resultado Básico: EN VERDE"
+    | EnAmarillo -> "Resultado Básico: EN AMARILLO"
+  )
   )
