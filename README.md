@@ -120,8 +120,39 @@ Resultado:
 
 # Requerimiento 2: Temporizador Automático
 
-Función:
+Casos de prueba funcion timer basica:
 
+(timer-basico 89)
+Salida esperada: EN-ROJO
+
+(timer-basico 91)
+Salida esperada:EN-VERDE
+
+(timer-basico 213)
+Salida esperada: EN-AMARILLO
+
+Casos de prueba funcion Timer (con intermitentes):
+
+Ejemplos que comprueban las duraciones de cada color:
+(TIMER 89 90 3 120 3 6 3)
+salida esperada: EN-ROJO
+
+(TIMER 92 90 3 120 3 6 3)
+salida esperada: INTERMITENTE-ROJO-VERDE
+
+(TIMER 94 90 3 120 3 6 3)
+EN-VERDE
+
+(TIMER 213 90 3 120 3 6 3)
+salida esperada: INTERMITENTE-VERDE-AMARILLO
+
+(TIMER 216 90 3 120 3 6 3)
+salida esperada: EN-AMARILLO
+
+(TIMER 222 90 3 120 3 6 3)
+salida esperada: INTERMITENTE-AMARILLO-ROJO
+
+Función:
 (timer tiempo-unix)
 
 ## Uso normal
