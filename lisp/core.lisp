@@ -1,3 +1,65 @@
+;; ========================================================
+;; FUNCION: transicionV2
+;;
+;; NATURALEZA: Pura
+;;             (No produce efectos secundarios. Para las
+;;             mismas entradas siempre devuelve la misma salida)
+;;
+;; ESTRATEGIA: Funcion Predicado
+;;             (Utiliza cond, and y eq para evaluar los
+;;             estados actuales y determinar la transicion
+;;             valida entre estados normales e intermitentes)
+;;
+;; IMPACTO: No destructiva
+;;          (No modifica estructuras existentes. Construye
+;;          y devuelve una nueva lista con el resultado)
+;;
+;; DESCRIPCION:
+;;             Modela las transiciones del semaforo
+;;             incorporando los estados de intermitencia:
+;;             intermitente-rojo-verde,
+;;             intermitente-verde-amarillo e
+;;             intermitente-amarillo-rojo.
+;;
+;; ========================================================
+
+(defun transicionV2 (color-actual cambiar-a)
+(cond
+
+	((and (eq color-actual 'en-rojo)
+		  (eq cambiar-a 'intermitente-rojo-verde))
+		(list color-actual "cambiar-a-intermitente-rojo-verde")
+	)
+
+	((and (eq color-actual 'intermitente-rojo-verde)
+		  (eq cambiar-a 'verde))
+		(list color-actual "cambiar-a-verde")
+	)
+
+	((and (eq color-actual 'en-verde)
+		  (eq cambiar-a 'intermitente-verde-amarillo))
+		(list color-actual "cambiar-a-intermitente-verde-amarillo")
+	)
+
+	((and (eq color-actual 'intermitente-verde-amarillo)
+		  (eq cambiar-a 'amarillo))
+		(list color-actual "cambiar-a-amarillo")
+	)
+
+	((and (eq color-actual 'en-amarillo)
+		  (eq cambiar-a 'intermitente-amarillo-rojo))
+		(list color-actual "cambiar-a-intermitente-amarillo-rojo")
+	)
+
+	((and (eq color-actual 'intermitente-amarillo-rojo)
+		  (eq cambiar-a 'rojo))
+		(list color-actual "cambiar-a-rojo")
+	)
+
+	(t
+		(list color-actual 'accion-por-defecto)
+	)
+)) 
 ;; ======================================================== 
 ;; FUNCIÓN: timer 
 ;; NATURALEZA: Pura (Dado el tiempo unix y las duraciones 
