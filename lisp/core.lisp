@@ -53,3 +53,24 @@
           epoch 
           colorAnterior 
           colorNuevo))
+
+;; FUNCIÓN: informe (Extensión 2: Persistencia)
+;; NATURALEZA: Impura (Genera y escribe de forma destructiva sobre un archivo de texto)
+;; ESTRATEGIA: Recursiva de Cola (Tail Recursive) para iterar la lista de datos sin usar bucles imperativos
+;; IMPACTO: No destructiva (No altera la lista original de entrada)
+(defun informe (datos)
+  (with-open-file (stream "informe-ejecucion-semaforo.txt" 
+                          :direction :output 
+                          :if-exists :superserve 
+                          :if-does-not-exist :create)
+    (format stream "Informe de Ejecución del Sistema Semafórico~%")
+    (format stream "=========================================~%")
+    (labels ((escribir-lineas (lista-datos)
+               (when lista-datos
+                 (let ((item (car lista-datos)))
+                   ;; item esperado: (timestamp "ROJO" "VERDE")
+                   (format stream "~A - Transición: ~A -> ~A~%" 
+                           (first item) (second item) (third item))
+                   (escribir-lineas (cdr lista-datos))))))
+      (escribir-lineas datos))
+    (format stream "--- Fin del Informe ---~%")))
