@@ -1,174 +1,282 @@
-;; ========================================================
-;; FUNCION: transicionV2
-;;
-;; NATURALEZA: Pura
-;;             (No produce efectos secundarios. Para las
-;;             mismas entradas siempre devuelve la misma salida)
-;;
-;; ESTRATEGIA: Funcion Predicado
-;;             (Utiliza cond, and y eq para evaluar los
-;;             estados actuales y determinar la transicion
-;;             valida entre estados normales e intermitentes)
-;;
-;; IMPACTO: No destructiva
-;;          (No modifica estructuras existentes. Construye
-;;          y devuelve una nueva lista con el resultado)
-;;
-;; DESCRIPCION:
-;;             Modela las transiciones del semaforo
-;;             incorporando los estados de intermitencia:
-;;             intermitente-rojo-verde,
-;;             intermitente-verde-amarillo e
-;;             intermitente-amarillo-rojo.
-;;
-;; ========================================================
+;;; ========================================================
+;;; Cargar dependencias
 
-(defun transicionV2 (color-actual cambiar-a)
-(cond
+(ql:quickload :cl-json)
 
-	((and (eq color-actual 'en-rojo)
-		  (eq cambiar-a 'intermitente-rojo-verde))
-		(list color-actual "cambiar-a-intermitente-rojo-verde")
-	)
+;;; ========================================================
+;;; FUNCION: transicion-v2
+;;;
+;;; NATURALEZA: Pura
+;;; ESTRATEGIA: Función predicado
+;;; IMPACTO: No destructiva
+;;; ========================================================
 
-	((and (eq color-actual 'intermitente-rojo-verde)
-		  (eq cambiar-a 'verde))
-		(list color-actual "cambiar-a-verde")
-	)
+(defun transicion-v2 (color-actual cambiar-a)
+  (cond
 
-	((and (eq color-actual 'en-verde)
-		  (eq cambiar-a 'intermitente-verde-amarillo))
-		(list color-actual "cambiar-a-intermitente-verde-amarillo")
-	)
+    ((and (eq color-actual 'en-rojo)
+          (eq cambiar-a 'intermitente-rojo-verde))
+     (list color-actual "cambiar-a-intermitente-rojo-verde"))
 
-	((and (eq color-actual 'intermitente-verde-amarillo)
-		  (eq cambiar-a 'amarillo))
-		(list color-actual "cambiar-a-amarillo")
-	)
+    ((and (eq color-actual 'intermitente-rojo-verde)
+          (eq cambiar-a 'verde))
+     (list color-actual "cambiar-a-verde"))
 
-	((and (eq color-actual 'en-amarillo)
-		  (eq cambiar-a 'intermitente-amarillo-rojo))
-		(list color-actual "cambiar-a-intermitente-amarillo-rojo")
-	)
+    ((and (eq color-actual 'en-verde)
+          (eq cambiar-a 'intermitente-verde-amarillo))
+     (list color-actual "cambiar-a-intermitente-verde-amarillo"))
 
-	((and (eq color-actual 'intermitente-amarillo-rojo)
-		  (eq cambiar-a 'rojo))
-		(list color-actual "cambiar-a-rojo")
-	)
+    ((and (eq color-actual 'intermitente-verde-amarillo)
+          (eq cambiar-a 'amarillo))
+     (list color-actual "cambiar-a-amarillo"))
 
-	(t
-		(list color-actual 'accion-por-defecto)
-	)
-)) 
+    ((and (eq color-actual 'en-amarillo)
+          (eq cambiar-a 'intermitente-amarillo-rojo))
+     (list color-actual "cambiar-a-intermitente-amarillo-rojo"))
 
-;; ======================================================== 
-;; FUNCIÓN: cargar-configuracion 
-;; NATURALEZA: Impura (lee las duraciones del semaforo desde
-;; el archivo cl-json)
-;; ESTRATEGIA: Función Simple 
-;; IMPACTO: No destructiva 
-;; ======================================================== 
+    ((and (eq color-actual 'intermitente-amarillo-rojo)
+          (eq cambiar-a 'rojo))
+     (list color-actual "cambiar-a-rojo"))
 
-(defun cargar-configuracion (archivo) 
-	(with-open-file (stream archivo) 
-	(cl-json:decode-json stream)))
+    (t
+     (list color-actual 'accion-por-defecto))))
 
-;; ======================================================== 
-;; FUNCIÓN: timer 
-;; NATURALEZA: Pura (Dado el tiempo unix y las duraciones 
-;; devuelve el estado en el que se encuentra el semaforo sin 
-;; producir efectos secundarios)
-;; ESTRATEGIA: Funcion Simple (utiliza cond y operaciones 
-;; matematicas simples)
-;; IMPACTO: No destructiva (no modifica ninguna estructura)
-;; ======================================================== 
+;;; ========================================================
+;;; FUNCIÓN: transicion
+;;; NATURALEZA: Pura
+;;; ESTRATEGIA: Condicional múltiple
+;;; IMPACTO: No destructiva
+;;; ========================================================
 
-(defun calcular-timer (tiempoUnix rojo inter-rojo-verde 
-						verde inter-verde-amarillo 
-						amarillo inter-amarillo-rojo)
+(defun transicion (color-actual cambiar-a)
+  (cond
 
-	(let ((segundo
-				(mod tiempoUnix (+ rojo inter-rojo-verde 
-								verde inter-verde-amarillo amarillo 
-								inter-amarillo-rojo))))
+    ((not (member color-actual
+                  '(en-rojo en-amarillo en-verde)
+                  :test #'eq))
+     (list color-actual 'accion-por-defecto))
 
-	(cond 
-		((< segundo rojo) 'en-rojo)
+    ((eq cambiar-a 'rojo)
+     (list color-actual "cambiar-a-rojo"))
 
-		((< segundo (+ rojo inter-rojo-verde))
-				'intermitente-rojo-verde)
+    ((eq cambiar-a 'amarillo)
+     (list color-actual "cambiar-a-amarillo"))
 
-		((< segundo (+ rojo inter-rojo-verde verde))
-				'en-verde)
-		((< segundo (+ rojo inter-rojo-verde 
-					verde inter-verde-amarillo))
-				'intermitente-verde-amarillo)
+    ((eq cambiar-a 'verde)
+     (list color-actual "cambiar-a-verde"))
 
-		((< segundo (+ rojo inter-rojo-verde verde 
-					inter-verde-amarillo amarillo))
-				'en-amarillo)
+    (t
+     (list color-actual 'accion-por-defecto))))
 
-		(t 'intermitente-amarillo-rojo)
-	)))
+;;; ========================================================
+;;; FUNCIONES AUXILIARES JSON
+;;; ========================================================
 
-;; ======================================================== 
-;; FUNCIÓN: timer-desde-config 
-;; NATURALEZA: Impura (lee y obtiene las duraciones desde el
-;; archivo cl-json)
-;; ESTRATEGIA: Función Simple 
-;; IMPACTO: No destructiva 
-;; ========================================================
-(defun timer-desde-config (tiempoUnix archivo) 
-  (let* ((config (cargar-configuracion archivo)) 
-      
-         (rojo (cdr (assoc :rojo config))) 
-         (inter-rojo-verde (cdr (assoc :inter-rojo-verde config)))
-         (verde (cdr (assoc :verde config))) 
-         (inter-verde-amarillo (cdr (assoc :inter-verde-amarillo config))) 
-         (amarillo (cdr (assoc :amarillo config))) 
-         (inter-amarillo-rojo (cdr (assoc :inter-amarillo-rojo config)))) 
-    
-    (calcular-timer tiempoUnix 
-    				rojo inter-rojo-verde 
-    				verde inter-verde-amarillo 
-    				amarillo inter-amarillo-rojo)))
+(defun leer-archivo-completo (ruta)
+  (with-open-file (stream ruta :direction :input)
+    (let ((contenido (make-string (file-length stream))))
+      (read-sequence contenido stream)
+      contenido)))
 
-; ========================================================
-;; FUNCION: registrarCambio
-;;
-;; NATURALEZA: Impura - (Produce efectos secundarios de entrada/salida. Altera
-;;             la terminal al imprimir texto en pantalla y
-;;             retorna siempre el valor NIL)
-;;
-;; ESTRATEGIA: Evaluacion Secuencial de Salida - (Utiliza format
-;;             para procesar y mostrar los datos ordenadamente)
-;;
-;; IMPACTO: No destructiva - (No modifica variables ni altera estructuras en
-;;          memoria)
-;; ========================================================
-(defun registrarCambio (epoch colorAnterior colorNuevo)
-  (format t "Tiempo ~ D: la luz ha cambiado de ~A a ~A ~%" 
-          epoch 
-          colorAnterior 
-          colorNuevo))
+(defun cargar-configuracion ()
+  (json:decode-json-from-string
+   (leer-archivo-completo "config.json")))
 
-;; FUNCIÓN: informe (Extensión 2: Persistencia)
-;; NATURALEZA: Impura (Genera y escribe de forma destructiva sobre un archivo de texto)
-;; ESTRATEGIA: Recursiva de Cola (Tail Recursive) para iterar la lista de datos sin usar bucles imperativos
-;; IMPACTO: No destructiva (No altera la lista original de entrada)
+(defun obtener-tiempo (clave configuracion)
+  (cdr (assoc clave configuracion)))
+
+;;; ========================================================
+;;; FUNCIÓN: timer-semaforo
+;;; NATURALEZA: Pura
+;;; ESTRATEGIA: Condicional múltiple
+;;; IMPACTO: No destructiva
+;;; ========================================================
+
+(defun timer-semaforo (tiempo-unix)
+
+  (let* ((config (cargar-configuracion))
+
+         (rojo
+          (obtener-tiempo :rojo config))
+
+         (inter-rojo-verde
+          (obtener-tiempo :inter-rojo-verde config))
+
+         (verde
+          (obtener-tiempo :verde config))
+
+         (inter-verde-amarillo
+          (obtener-tiempo :inter-verde-amarillo config))
+
+         (amarillo
+          (obtener-tiempo :amarillo config))
+
+         (inter-amarillo-rojo
+          (obtener-tiempo :inter-amarillo-rojo config))
+
+         (segundo
+          (mod tiempo-unix
+               (+ rojo
+                  inter-rojo-verde
+                  verde
+                  inter-verde-amarillo
+                  amarillo
+                  inter-amarillo-rojo))))
+
+    (cond
+
+      ((< segundo rojo)
+       'en-rojo)
+
+      ((< segundo (+ rojo inter-rojo-verde))
+       'intermitente-rojo-verde)
+
+      ((< segundo (+ rojo
+                      inter-rojo-verde
+                      verde))
+       'en-verde)
+
+      ((< segundo (+ rojo
+                      inter-rojo-verde
+                      verde
+                      inter-verde-amarillo))
+       'intermitente-verde-amarillo)
+
+      ((< segundo (+ rojo
+                      inter-rojo-verde
+                      verde
+                      inter-verde-amarillo
+                      amarillo))
+       'en-amarillo)
+
+      (t
+       'intermitente-amarillo-rojo))))
+
+;;; ========================================================
+;;; FUNCIÓN: registrar-cambio
+;;; NATURALEZA: Impura
+;;; ESTRATEGIA: Salida por pantalla
+;;; IMPACTO: No destructiva
+;;; ========================================================
+
+(defun registrar-cambio (epoch color-anterior color-nuevo)
+  (format t
+          "Tiempo ~D: la luz ha cambiado de ~A a ~A~%"
+          epoch
+          color-anterior
+          color-nuevo))
+
+;;; ========================================================
+;;; FUNCIÓN: informe
+;;; NATURALEZA: Impura
+;;; ESTRATEGIA: Recursiva
+;;; IMPACTO: No destructiva
+;;; ========================================================
+
 (defun informe (datos)
-  (with-open-file (stream "informe-ejecucion-semaforo.txt" 
-                          :direction :output 
-                          :if-exists :superserve 
-                          :if-does-not-exist :create)
-    (format stream "Informe de Ejecución del Sistema Semafórico~%")
-    (format stream "=========================================~%")
-    (labels ((escribir-lineas (lista-datos)
-               (when lista-datos
-                 (let ((item (car lista-datos)))
-                   ;; item esperado: (timestamp "ROJO" "VERDE")
-                   (format stream "~A - Transición: ~A -> ~A~%" 
-                           (first item) (second item) (third item))
-                   (escribir-lineas (cdr lista-datos))))))
+
+  (with-open-file
+      (stream
+       "informe-ejecucion-semaforo.txt"
+       :direction :output
+       :if-exists :supersede
+       :if-does-not-exist :create)
+
+    (format stream
+            "Informe de Ejecución del Sistema Semafórico~%")
+
+    (format stream
+            "=========================================~%")
+
+    (labels
+        ((escribir-lineas (lista-datos)
+
+           (when lista-datos
+
+             (let ((item (car lista-datos)))
+
+               (format stream
+                       "~A - Transición: ~A -> ~A~%"
+                       (first item)
+                       (second item)
+                       (third item))
+
+               (escribir-lineas
+                (cdr lista-datos))))))
+
       (escribir-lineas datos))
-    (format stream "--- Fin del Informe ---~%")))
+
+    (format stream
+            "--- Fin del Informe ---~%")))
+
+;;; ========================================================
+;;; FUNCIÓN: duracion-ciclo
+;;; NATURALEZA: Pura
+;;; ESTRATEGIA: mapcar + reduce
+;;; IMPACTO: No destructiva
+;;; ========================================================
+
+(defun duracion-ciclo (tiempos-alist)
+
+  (if tiempos-alist
+      (reduce #'+
+              (mapcar #'cdr tiempos-alist))
+      0))
+
+;;; ========================================================
+;;; FUNCIÓN: recomendacion-ciclo
+;;; NATURALEZA: Pura
+;;; ESTRATEGIA: cond
+;;; IMPACTO: No destructiva
+;;; ========================================================
+
+(defun recomendacion-ciclo (duracion)
+
+  (cond
+
+    ((< duracion 35)
+     "Duracion demasiado corta")
+
+    ((> duracion 150)
+     "Duracion demasiado larga")
+
+    (t
+     "Duracion dentro del rango recomendado")))
+
+;;; ========================================================
+;;; FUNCIÓN: ciclos-por-tiempo
+;;; NATURALEZA: Pura
+;;; ESTRATEGIA: truncate
+;;; IMPACTO: No destructiva
+;;; ========================================================
+
+(defun ciclos-por-tiempo (minutos tiempos-alist)
+
+  (truncate
+   (* minutos 60)
+   (duracion-ciclo tiempos-alist)))
+
+;;; ========================================================
+;;; FUNCIÓN: informe-distribucion-temporal
+;;; NATURALEZA: Pura
+;;; ESTRATEGIA: mapcar
+;;; IMPACTO: No destructiva
+;;; ========================================================
+
+(defun informe-distribucion-temporal (tiempos-alist)
+
+  (let ((total
+         (duracion-ciclo tiempos-alist)))
+
+    (mapcar
+     (lambda (estado)
+
+       (list
+        (car estado)
+
+        (float
+         (* (/ (cdr estado)
+               total)
+            100))))
+
+     tiempos-alist)))

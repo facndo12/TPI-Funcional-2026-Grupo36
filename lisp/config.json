@@ -1,8 +1,8 @@
 {
- "rojo": 90,
- "inter-rojo-verde": 3,
- "verde": 120,
- "inter-verde-amarillo": 3,
- "amarillo": 6,
- "inter-amarillo-rojo": 3
+  "rojo": 90,
+  "inter-rojo-verde": 3,
+  "verde": 120,
+  "inter-verde-amarillo": 3,
+  "amarillo": 6,
+  "inter-amarillo-rojo": 3
 }
