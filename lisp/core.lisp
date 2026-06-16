@@ -60,6 +60,19 @@
 		(list color-actual 'accion-por-defecto)
 	)
 )) 
+
+;; ======================================================== 
+;; FUNCIÓN: cargar-configuracion 
+;; NATURALEZA: Impura (lee las duraciones del semaforo desde
+;; el archivo cl-json)
+;; ESTRATEGIA: Función Simple 
+;; IMPACTO: No destructiva 
+;; ======================================================== 
+
+(defun cargar-configuracion (archivo) 
+	(with-open-file (stream archivo) 
+	(cl-json:decode-json stream)))
+
 ;; ======================================================== 
 ;; FUNCIÓN: timer 
 ;; NATURALEZA: Pura (Dado el tiempo unix y las duraciones 
@@ -69,9 +82,10 @@
 ;; matematicas simples)
 ;; IMPACTO: No destructiva (no modifica ninguna estructura)
 ;; ======================================================== 
-(defun timer (tiempoUnix rojo inter-rojo-verde 
-				verde inter-verde-amarillo 
-				amarillo inter-amarillo-rojo)
+
+(defun calcular-timer (tiempoUnix rojo inter-rojo-verde 
+						verde inter-verde-amarillo 
+						amarillo inter-amarillo-rojo)
 
 	(let ((segundo
 				(mod tiempoUnix (+ rojo inter-rojo-verde 
@@ -96,6 +110,28 @@
 
 		(t 'intermitente-amarillo-rojo)
 	)))
+
+;; ======================================================== 
+;; FUNCIÓN: timer-desde-config 
+;; NATURALEZA: Impura (lee y obtiene las duraciones desde el
+;; archivo cl-json)
+;; ESTRATEGIA: Función Simple 
+;; IMPACTO: No destructiva 
+;; ========================================================
+(defun timer-desde-config (tiempoUnix archivo) 
+  (let* ((config (cargar-configuracion archivo)) 
+      
+         (rojo (cdr (assoc :rojo config))) 
+         (inter-rojo-verde (cdr (assoc :inter-rojo-verde config)))
+         (verde (cdr (assoc :verde config))) 
+         (inter-verde-amarillo (cdr (assoc :inter-verde-amarillo config))) 
+         (amarillo (cdr (assoc :amarillo config))) 
+         (inter-amarillo-rojo (cdr (assoc :inter-amarillo-rojo config)))) 
+    
+    (calcular-timer tiempoUnix 
+    				rojo inter-rojo-verde 
+    				verde inter-verde-amarillo 
+    				amarillo inter-amarillo-rojo)))
 
 ; ========================================================
 ;; FUNCION: registrarCambio
